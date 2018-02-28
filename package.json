@@ -10,10 +10,8 @@
   "license": "MIT",
   "dependencies": {
     "babel-preset-env": "^1.6.0",
-    "babel-preset-es2017": "^6.24.1",
     "babel-preset-react": "^6.24.1",
     "babelify": "^7.3.0",
-    "global": "^4.3.2",
     "grunt": "^1.0.1",
     "grunt-browserify": "^5.2.0",
     "grunt-cli": "^1.2.0",
@@ -26,7 +24,6 @@
     "prop-types": "^15.6.1",
     "react": "^16.2.0",
     "react-dom": "^16.2.0",
-    "react-redux": "^5.0.7",
     "redux": "^3.7.2",
     "require-dir": "^0.3.2"
   }
