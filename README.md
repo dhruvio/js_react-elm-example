@@ -26,4 +26,4 @@ npm start
 - Managing asynchronous data requirements declaratively scoped to a component.
 - Global state mutation.
 - Helper to standardise testing.
-  - `testComponent :: Component -> Specification -> IO TestResults
+  - `testComponent :: Component -> Specification -> IO TestResults`
