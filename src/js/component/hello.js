@@ -35,13 +35,13 @@ export const update = (state = {}, message , data) => {
 
 export const View = ({ state, dispatch }) => {
   const setText = () => dispatch(ACTIONS.SET_TEXT, state.input);
+  const onSubmit = e => e.preventDefault() && setText();
+  const inInput = e => dispatch(ACTIONS.INPUT_TEXT, e.target.value);
   return (
     <div>
-      <p>
-        {state.text}
-      </p>
-      <form onSubmit={e => e.preventDefault() && setText()}>
-        <input type="text" value={state.input} onInput={e => dispatch(ACTIONS.INPUT_TEXT, e.target.value)} />
+      <p>{state.text}</p>
+      <form onSubmit={onSubmit}>
+        <input type="text" value={state.input} onInput={onInput} />
         <button onClick={setText}>
           Change Text
         </button>

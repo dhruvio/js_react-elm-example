@@ -2,7 +2,7 @@
 
 import React from "react";
 import PropTypes from "prop-types";
-import { defaults} from "lodash";
+import { defaults } from "lodash";
 
 export const ACTIONS = {
   MODIFY_COUNT: 0

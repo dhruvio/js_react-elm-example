@@ -22,6 +22,11 @@ npm start
 
 ## TODO
 
+- Define different component types:
+  - Standard component
+  - "Page" component (handles routing, receives route params)
+- Each component creates its `PropTypes` with a helper function
+  - `definePropTypes :: StatePropType -> ComponentPropTypes`
 - Client-side routing.
 - Managing asynchronous data requirements declaratively scoped to a component.
 - Global state mutation.
