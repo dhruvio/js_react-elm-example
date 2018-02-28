@@ -36,7 +36,7 @@ export const update = (state = {}, message , data) => {
 export const View = ({ state, dispatch }) => {
   const setText = () => dispatch(ACTIONS.SET_TEXT, state.input);
   const onSubmit = e => e.preventDefault() && setText();
-  const inInput = e => dispatch(ACTIONS.INPUT_TEXT, e.target.value);
+  const onInput = e => dispatch(ACTIONS.INPUT_TEXT, e.target.value);
   return (
     <div>
       <p>{state.text}</p>
