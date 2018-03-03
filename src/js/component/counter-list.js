@@ -5,7 +5,9 @@ import PropTypes from "prop-types";
 import { defaults } from "lodash";
 import * as Counter from "./counter";
 
-export const ACTIONS = {
+//TODO support commands
+
+export const MSG = {
   ADD_COUNTER: 0,
   REMOVE_COUNTER: 1,
   UPDATE_COUNTER: 2
@@ -19,17 +21,17 @@ export const init = () => ({
 export const update = (state = {}, message , data) => {
   switch (message) {
 
-    case ACTIONS.ADD_COUNTER:
+    case MSG.ADD_COUNTER:
       state.counters.push(Counter.init(`Counter ${state.nextId}`));
       state.nextId++;
       return state;
 
 
-    case ACTIONS.REMOVE_COUNTER:
+    case MSG.REMOVE_COUNTER:
       state.counters.splice(data.index, 1);
       return state;
 
-    case ACTIONS.UPDATE_COUNTER:
+    case MSG.UPDATE_COUNTER:
       const { index: index_, message: message_, data: data_ } = data;
       const counters = state.counters.map((counter, index) => {
         if (index !== index_) return counter;
@@ -48,8 +50,8 @@ const viewCounter = (counter, dispatch, key) => (
 
 const viewCounters = (counters, dispatch) => {
   return counters.map((counter, index) => {
-    const removeCounter = () => dispatch(ACTIONS.REMOVE_COUNTER, { index });
-    const counterDispatch = (message, data) => dispatch(ACTIONS.UPDATE_COUNTER, {
+    const removeCounter = () => dispatch(MSG.REMOVE_COUNTER, { index });
+    const counterDispatch = (message, data) => dispatch(MSG.UPDATE_COUNTER, {
       index,
       message,
       data
@@ -64,7 +66,7 @@ const viewCounters = (counters, dispatch) => {
 };
 
 export const View = ({ state, dispatch }) => {
-  const addCounter = () => dispatch(ACTIONS.ADD_COUNTER);
+  const addCounter = () => dispatch(MSG.ADD_COUNTER);
   return (
     <div>
       <h2>Counter List</h2>

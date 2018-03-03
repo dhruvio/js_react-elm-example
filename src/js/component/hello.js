@@ -4,39 +4,51 @@ import React from "react";
 import PropTypes from "prop-types";
 import { defaults } from "lodash";
 
-export const ACTIONS = {
+//TODO move this to a command helper module
+const timeout = (message, duration) => dispatch => setTimeout(() => dispatch(message), duration);
+
+const MSG = {
   SET_TEXT: 0,
-  INPUT_TEXT: 1
+  INPUT_TEXT: 1,
+  TIMEOUT_COMPLETE: 2
 };
 
 export const init = (text = "Hello, World!") => ({
-  text,
-  input: ""
+  state: {
+    text,
+    input: ""
+  }
 });
 
 export const update = (state = {}, message , data) => {
   switch (message) {
 
-    case ACTIONS.SET_TEXT:
+    case MSG.SET_TEXT:
       return {
-        text: data,
-        input: ""
+        state: {
+          text: data,
+          input: ""
+        },
+        command: timeout(MSG.TIMEOUT_COMPLETE, 3000)
       };
 
-    case ACTIONS.INPUT_TEXT:
-      return defaults({
-        input: data
-      }, state);
+    case MSG.INPUT_TEXT:
+      state.input = data;
+      return { state };
+
+    case MSG.TIMEOUT_COMPLETE:
+      state.text = "Timeout Complete";
+      return { state };
 
     default:
-      return state;
+      return { state };
   }
 };
 
 export const View = ({ state, dispatch }) => {
-  const setText = () => dispatch(ACTIONS.SET_TEXT, state.input);
+  const setText = () => dispatch(MSG.SET_TEXT, state.input);
   const onSubmit = e => e.preventDefault() && setText();
-  const onInput = e => dispatch(ACTIONS.INPUT_TEXT, e.target.value);
+  const onInput = e => dispatch(MSG.INPUT_TEXT, e.target.value);
   return (
     <div>
       <p>{state.text}</p>
