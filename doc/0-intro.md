@@ -59,7 +59,7 @@ In this course, we will implement The Elm Architecture in JavaScript using React
 
 *React* is a view library written by Facebook in JavaScript. When it was originally introduced, front-end applications were predominately implemented utilizing the MVC architecture. Facebook explained that React was only the "V" in "MVC". This meant that an application developer now had the autonomy to define their own state management by moving away from monolithic front-end application frameworks like Ember, Angular and Backbone. Consequently, it became more important for developers to be disciplined when building applications with React, as the risk of bloat and unnecessary coupling is now much higher than using a monolithic framework that defines the rules for you. The extra flexibility that comes with using React is a double-edged sword. 
 
-We will use React's pure, stateless component syntax in this course, which will correspond to The Elm Architectur's `view` function.
+We will use React's pure, stateless component syntax in this course, which will correspond to The Elm Architecture's `view` function.
 
 ### 0.1.4 Redux
 
