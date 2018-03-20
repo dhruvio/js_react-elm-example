@@ -74,7 +74,7 @@ export const view = ({ state, dispatch }) => {
         <button onClick={decrement}>Decrement</button>
         <button onClick={toggleAutoIncrement}>{autoIncrementText}</button>
         <br />
-        <input type="text" value={state.timeoutInput} onInput={onTimeoutInput} />
+        <input type="text" placeholder="Timeout duration" value={state.timeoutInput} onInput={onTimeoutInput} />
         <button onClick={triggerTimeout}>Increment by 1 in {state.timeoutInputInt}ms</button>
       </div>
     </div>

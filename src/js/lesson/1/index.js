@@ -3,20 +3,11 @@
 import { noop, isEqual, differenceWith, get } from "lodash";
 import React from "react";
 import ReactDom from "react-dom";
-import { createStore, applyMiddleware, compose } from "redux";
+import { createStore } from "redux";
 import * as Root from "./component/counter-list";
 
 //helper to build dispatch function
 const storeToDispatch = store => (type, data) => store.dispatch({ type, data });
-
-//middleware to execute commands
-const commandMiddleware = store => next => action => {
-  const result = next(action);
-  const { state, command = noop } = store.getState();
-  const dispatch = storeToDispatch(store);
-  command(dispatch);
-  return result;
-};
 
 //helper to build reducer function
 const updateToReducer = update => ({ state }, { type: message, data }) => update(state, message, data);
@@ -45,13 +36,12 @@ const manageSubscriptions = (state, dispatch) => {
 
 //set up the reducer function
 const reducer = updateToReducer(Root.update);
-//support redux devtools
-const composeEnhancers = window.__REDUX_DEVTOOLS_EXTENSION_COMPOSE__ || compose;
 //initialize the store
 const store = createStore(
   reducer,
   Root.init(), 
-  composeEnhancers(applyMiddleware(commandMiddleware))
+  //support redux devtools
+  window.__REDUX_DEVTOOLS_EXTENSION__ && window.__REDUX_DEVTOOLS_EXTENSION__()
 );
 //build root component dispatch function
 const dispatch = storeToDispatch(store);
@@ -60,7 +50,8 @@ const dispatch = storeToDispatch(store);
 //manage subscriptions
 //every state update
 const tick = () => {
-  const state = store.getState().state;
+  const { state, command = noop } = store.getState();
+  command(dispatch);
   render(state, dispatch);
   manageSubscriptions(state, dispatch);
 };
