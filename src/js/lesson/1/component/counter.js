@@ -13,11 +13,12 @@ export const init = (title = "Counter", count = 0) => ({
     autoIncrement: false,
     timeoutInput: "",
     timeoutInputInt: 1000
-  }
+  },
+  command: timeout(1000, "modifyCount", { delta: 1 })
 });
 
 export const subscriptions = state => {
-  if (state.autoIncrement) return [ every(1000, "onAutoIncrement", { delta: 1 }) ];
+  if (state.autoIncrement) return [ every(1000, "modifyCount", { delta: 1 }) ];
   else return [];
 };
 
@@ -30,10 +31,6 @@ export const update = (state = {}, message , data) => {
 
     case "toggleAutoIncrement":
       state.autoIncrement = !state.autoIncrement;
-      return { state };
-
-    case "onAutoIncrement":
-      state.count += data.delta;
       return { state };
 
     case "onTimeoutInput":

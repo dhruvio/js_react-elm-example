@@ -38,7 +38,7 @@ export const update = (state = {}, message , data) => {
       return updateChild({
         key: "counterA",
         parentState: state,
-        parentMessage: "counterBMessage",
+        parentMessage: "counterAMessage",
         childUpdate: Counter.update,
         childMessage: data.message,
         childData: data.data

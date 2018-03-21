@@ -1,16 +1,21 @@
 "use strict";
 
-import { noop, isEqual, differenceWith, get } from "lodash";
+import { isFunction, isEqual, differenceWith, get } from "lodash";
 import React from "react";
 import ReactDom from "react-dom";
 import { createStore } from "redux";
-import * as Root from "./component/counter-list";
+import * as Root from "./component/counter";
 
 //helper to build dispatch function
 const storeToDispatch = store => (type, data) => store.dispatch({ type, data });
 
 //helper to build reducer function
-const updateToReducer = update => ({ state }, { type: message, data }) => update(state, message, data);
+const updateToReducer = update => (reduxState, { type: message, data }) => {
+  //initialize state here so the command is run properly
+  if (message === "@@INIT") return Root.init();
+  //otherwise pipe through the state machine as normal
+  else return update(get(reduxState, "state"), message, data);
+}
 
 //helper to propagate render to DOM
 const render = (state, dispatch) => ReactDom.render(
@@ -39,7 +44,6 @@ const reducer = updateToReducer(Root.update);
 //initialize the store
 const store = createStore(
   reducer,
-  Root.init(), 
   //support redux devtools
   window.__REDUX_DEVTOOLS_EXTENSION__ && window.__REDUX_DEVTOOLS_EXTENSION__()
 );
@@ -50,8 +54,8 @@ const dispatch = storeToDispatch(store);
 //manage subscriptions
 //every state update
 const tick = () => {
-  const { state, command = noop } = store.getState();
-  command(dispatch);
+  const { state, command } = store.getState();
+  if (isFunction(command)) command(dispatch);
   render(state, dispatch);
   manageSubscriptions(state, dispatch);
 };
