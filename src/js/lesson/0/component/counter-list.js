@@ -18,7 +18,6 @@ export const update = (state = {}, message , data) => {
       state.nextId++;
       return state;
 
-
     case "removeCounter":
       state.counters.splice(data.index, 1);
       return state;

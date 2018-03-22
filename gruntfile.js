@@ -7,7 +7,7 @@ global.gruntConfig = {
     build
   },
   src: {
-    js: `${src}/js/lesson/0`,
+    js: `${src}/js/lesson/2`,
     "static": `${src}/static`
   },
   out: {

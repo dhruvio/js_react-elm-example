@@ -4,7 +4,7 @@ import { isFunction, isEqual, differenceWith, get } from "lodash";
 import React from "react";
 import ReactDom from "react-dom";
 import { createStore } from "redux";
-import * as Root from "./component/counter";
+import * as Root from "./component/counter-list";
 
 //helper to build dispatch function
 const storeToDispatch = store => (type, data) => store.dispatch({ type, data });

@@ -3,7 +3,7 @@
 import React from "react";
 import ReactDom from "react-dom";
 import { createStore } from "redux";
-import * as root from "./component/hello";
+import * as root from "./component/counter-list";
 
 //helper to build reducer function
 const updateToReducer = update => (state, { type: message, data }) => update(state, message, data);

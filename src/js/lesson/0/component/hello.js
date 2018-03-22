@@ -9,7 +9,7 @@ export const init = (text = "Hello, World!") => ({
   input: ""
 });
 
-export const update = (state = {}, message , data) => {
+export const update = (state = {}, message, data) => {
   switch (message) {
 
     case "setText":
