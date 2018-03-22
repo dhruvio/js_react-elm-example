@@ -1,4 +1,4 @@
-module.exports = {
+module.exports = grunt => ({
   build: {
     options: {
       transform: [
@@ -18,4 +18,4 @@ module.exports = {
     ],
     dest: `${gruntConfig.out.js}`
   }
-};
+});

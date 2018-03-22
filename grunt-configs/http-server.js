@@ -1,8 +1,8 @@
-module.exports = {
+module.exports = grunt => ({
   dev: {
     root: gruntConfig.dir.build,
-    port: process.env.PORT || 3000,
-    host: process.env.HOSTNAME || "127.0.0.1",
+    port: gruntConfig.env.frontEndPort,
+    host: gruntConfig.env.frontEndHost,
     cache: 0,
     showDir: true,
     autoIndex: true,
@@ -10,4 +10,4 @@ module.exports = {
     runInBackground: true,
     openBrowser: false
   }
-};
+});

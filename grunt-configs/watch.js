@@ -1,4 +1,4 @@
-module.exports = {
+module.exports = grunt => ({
   options: {
     interrupt: true,
     debounceDelay: 250
@@ -12,4 +12,4 @@ module.exports = {
       "build"
     ]
   }
-};
+});
