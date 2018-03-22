@@ -5,14 +5,6 @@ import PropTypes from "prop-types";
 import { defaults } from "lodash";
 import * as Counter from "./counter";
 
-//TODO support commands
-
-export const MSG = {
-  ADD_COUNTER: 0,
-  REMOVE_COUNTER: 1,
-  UPDATE_COUNTER: 2
-};
-
 export const init = () => ({
   nextId: 1,
   counters: []
@@ -21,17 +13,17 @@ export const init = () => ({
 export const update = (state = {}, message , data) => {
   switch (message) {
 
-    case MSG.ADD_COUNTER:
+    case "addCounter":
       state.counters.push(Counter.init(`Counter ${state.nextId}`));
       state.nextId++;
       return state;
 
 
-    case MSG.REMOVE_COUNTER:
+    case "removeCounter":
       state.counters.splice(data.index, 1);
       return state;
 
-    case MSG.UPDATE_COUNTER:
+    case "updateCounter":
       const { index: index_, message: message_, data: data_ } = data;
       const counters = state.counters.map((counter, index) => {
         if (index !== index_) return counter;
@@ -44,29 +36,25 @@ export const update = (state = {}, message , data) => {
   }
 };
 
-const viewCounter = (counter, dispatch, key) => (
-  <Counter.View state={counter} dispatch={dispatch} key={key} />
-);
-
 const viewCounters = (counters, dispatch) => {
   return counters.map((counter, index) => {
-    const removeCounter = () => dispatch(MSG.REMOVE_COUNTER, { index });
-    const counterDispatch = (message, data) => dispatch(MSG.UPDATE_COUNTER, {
+    const removeCounter = () => dispatch("removeCounter", { index });
+    const counterDispatch = (message, data) => dispatch("updateCounter", {
       index,
       message,
       data
     });
     return (
-      <div className="counter">
-        {viewCounter(counter, counterDispatch, index)}
+      <div className="counter" key={index}>
+        <Counter.view state={counter} dispatch={counterDispatch} />
         <button onClick={removeCounter}>Remove</button>
       </div>
     );
   });
 };
 
-export const View = ({ state, dispatch }) => {
-  const addCounter = () => dispatch(MSG.ADD_COUNTER);
+export const view = ({ state, dispatch }) => {
+  const addCounter = () => dispatch("addCounter");
   return (
     <div>
       <h2>Counter List</h2>
@@ -76,7 +64,7 @@ export const View = ({ state, dispatch }) => {
   );
 };
 
-View.propTypes = {
+view.propTypes = {
   state: PropTypes.any.isRequired,
   dispatch: PropTypes.func.isRequired
 };

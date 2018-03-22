@@ -71,6 +71,5 @@ We will use Redux to build functions that correspond to The Elm Architecture's `
 
 ```bash
 git clone https://github.com/dhruvio/js_react-elm-example.git
-cd js_react-elm-example
-git checkout lesson-0
+cd js_react-elm-example/src/js/lesson/0
 ```

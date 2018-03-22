@@ -4,39 +4,24 @@ import React from "react";
 import PropTypes from "prop-types";
 import { defaults } from "lodash";
 
-//TODO move this to a command helper module
-const timeout = (message, data, duration) => dispatch => setTimeout(() => dispatch(message, data), duration);
-
-const MSG = {
-  MODIFY_COUNT: 0
-};
-
-export const init = (title = "Counter", count = 0) => ({
-  state: { title, count }
-});
+export const init = (title = "Counter", count = 0) => ({ title, count });
 
 export const update = (state = {}, message , data) => {
   switch (message) {
 
-    case MSG.MODIFY_COUNT:
-      state.count += data;
-      return {
-        state,
-        command: timeout(MSG.TIMEOUT_COMPLETE, data * -1, 3000)
-      };
-
-    case MSG.TIMEOUT_COMPLETE:
-      state.count += data;
-      return { state };
+    case "modifyCount":
+      return defaults({
+        count: state.count += data
+      }, state);
 
     default:
-      return { state };
+      return state;
   }
 };
 
-export const View = ({ state, dispatch }) => {
-  const increment = () => dispatch(MSG.MODIFY_COUNT, 1);
-  const decrement = () => dispatch(MSG.MODIFY_COUNT, -1);
+export const view = ({ state, dispatch }) => {
+  const increment = () => dispatch("modifyCount", 1);
+  const decrement = () => dispatch("modifyCount", -1);
   const buttonsStyle = {
     display: "flex",
     flexFlow: "row nowrap"
@@ -53,7 +38,7 @@ export const View = ({ state, dispatch }) => {
   );
 };
 
-View.propTypes = {
+view.propTypes = {
   state: PropTypes.any.isRequired,
   dispatch: PropTypes.func.isRequired
 };
