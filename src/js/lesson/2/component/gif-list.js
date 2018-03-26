@@ -11,62 +11,62 @@ import updateIndexedChild from "../util/update-indexed-child";
 import batchCommands from "../util/batch-commands";
 import backEndGet from "../command/back-end-get";
 
-const getGifsCommand = sessionId => backEndGet({
+const getAllGifs = bucketId => backEndGet({
   path: "gif",
-  headers: { "x-session-id": sessionId },
-  successMessage: "onGetSuccess",
-  failureMessage: "onGetFailure"
+  headers: { "x-bucket-id": bucketId },
+  successMessage: "onGetAllGifsSuccess",
+  failureMessage: "onGetAllGifsFailure"
 });
 
-const INIT_SESSION_ID = "defaultSession";
+const getNewGif = (bucketId, category) => backEndGet({
+  path: `gif/${category}`,
+  headers: { "x-bucket-id": bucketId },
+  successMessage: "onGetNewGifSuccess",
+  failureMessage: "onGetNewGifFailure"
+});
+
+
+const INIT_BUCKET_ID = "dogs";
 
 export const init = () => ({
   state: {
     loadingStatus: "complete",
-    sessionId: {
-      input: INIT_SESSION_ID,
-      value: INIT_SESSION_ID
+    bucketId: {
+      input: INIT_BUCKET_ID,
+      value: INIT_BUCKET_ID
     },
-    category: {
-      input: "cat",
-      value: "cat"
-    },
+    categoryInput: "dog",
     gifs: []
   },
-  command: getGifsCommand(INIT_SESSION_ID)
+  command: getAllGifs(INIT_BUCKET_ID)
 });
 
 export const subscriptions = () => [];
 
 export const update = (state, message, data) => {
   switch (message) {
-    case "onInputSessionId":
-      state.sessionId.input = data.input;
+    case "onInputBucketId":
+      state.bucketId.input = data.input;
       return { state };
 
-    case "changeSessionId":
-      state.sessionId.value = state.sessionId.input;
+    case "changeBucketId":
+      state.loadingStatus = "loading";
+      state.bucketId.value = state.bucketId.input;
       return {
         state,
-        command: getGifsCommand(state.sessionId.value)
+        command: getAllGifs(state.bucketId.value)
       };
 
     case "onInputCategory":
-      state.category.input = data.input;
-      return { state };
-
-    case "changeCategory":
-      state.category.value = state.category.input;
+      state.categoryInput = data.input;
       return { state };
 
     case "addGif":
-      const { state: childState, command: childCommand } = Gif.init({
-        sessionId: state.sessionId.value,
-        category: state.category.value
-      });
-      const command = mapIndexedCommand("updateGif", state.gifs.length, childCommand);
-      state.gifs.push(childState);
-      return { state, command };
+      state.loadingStatus = "loading";
+      return {
+        state,
+        command: getNewGif(state.bucketId.value, state.categoryInput)
+      };
 
     case "updateGif":
       return updateIndexedChild({
@@ -79,28 +79,44 @@ export const update = (state, message, data) => {
         childData: data.data
       });
 
-    case "onGetSuccess":
+    case "onGetAllGifsSuccess":
       state.loadingStatus = "complete";
       const result = data.body.map(
-        gif => Gif.init(
-          assign(
-            {
-              sessionId: state.sessionId.value,
-              category: state.category.value
-            },
-            gif
-          )
-        )
+        gif => Gif.init({
+          id: gif.id,
+          imageUrl: gif.imageUrl,
+          likes: gif.likes,
+          loadingStatus: "complete",
+          bucketId: state.bucketId.value
+        })
       );
       state.gifs = result.map(({ state }) => state);
-      const commands = result.map(({ command }, index) => mapIndexedCommand("updateGif", index, command));
-      return {
-        state,
-        command: batchCommands(...commands)
-      };
+      return { state };
 
-    case "onGetFailure":
+    case "onGetAllGifsFailure":
       state.loadingStatus = "error";
+      return { state };
+
+    case "onGetNewGifSuccess":
+      state.loadingStatus = "complete";
+      const { state: gifState } = Gif.init({
+        id: data.body.id,
+        imageUrl: data.body.imageUrl,
+        likes: data.body.likes,
+        loadingStatus: "complete",
+        bucketId: state.bucketId.value
+      });
+      state.gifs.push(gifState);
+      return { state };
+
+    case "onGetNewGifFailure":
+      console.error(data.body);
+      state.loadingStatus = "complete";
+      const { state: errorGifState }= Gif.init({
+        imageUrl: "https://media.giphy.com/media/l4KibWpBGWchSqCRy/giphy.gif",
+        loadingStatus: "error"
+      });
+      state.gifs.push(errorGifState);
       return { state };
 
     default:
@@ -129,29 +145,26 @@ const viewGifs = ({ gifs, dispatch }) => {
 };
 
 export const view = ({ state, dispatch }) => {
-  const onInputSessionId = e => dispatch("onInputSessionId", { input: e.target.value });
+  const onInputBucketId = e => dispatch("onInputBucketId", { input: e.target.value });
   const onInputCategory = e => dispatch("onInputCategory", { input: e.target.value });
-  const changeSessionId = e => e.preventDefault() || dispatch("changeSessionId");
-  const changeCategory = e => e.preventDefault() || dispatch("changeCategory");
-  const addGif = () => dispatch("addGif");
+  const changeBucketId = e => e.preventDefault() || dispatch("changeBucketId");
+  const addGif = e => e.preventDefault() || dispatch("addGif");
   return (
     <div className="gif-list">
       <h1>Gif List</h1>
       <ul className="gif-list-metadata">
-        <li>Session ID: {state.sessionId.value}</li>
-        <li>Category: {state.category.value}</li>
+        <li>Loading status: {state.loadingStatus}</li>
+        <li>Bucket ID: {state.bucketId.value}</li>
+        <li>Category: {state.categoryInput}</li>
       </ul>
-      <form className="gif-list-session-id" onSubmit={changeSessionId}>
-        <input value={state.sessionId.input} onChange={onInputSessionId} />
-        <button onClick={changeSessionId}>Change Session ID</button>
+      <form className="gif-list-bucket-id" onSubmit={changeBucketId}>
+        <input value={state.bucketId.input} onChange={onInputBucketId} />
+        <button onClick={changeBucketId}>Change Bucket ID</button>
       </form>
-      <form className="gif-list-category" onSubmit={changeCategory}>
-        <input value={state.category.input} onChange={onInputCategory} />
-        <button onClick={changeCategory}>Change Category</button>
-      </form>
-      <div className="gif-list-add">
+      <form className="gif-list-add" onSubmit={addGif}>
+        <input value={state.categoryInput} onChange={onInputCategory} />
         <button onClick={addGif}>Add Gif</button>
-      </div>
+      </form>
       {viewGifs({
         gifs: state.gifs,
         dispatch

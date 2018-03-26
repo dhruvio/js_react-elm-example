@@ -15,7 +15,7 @@ const storeToDispatch = store => (type, data) => store.dispatch({ type, data });
 //helper to build reducer function
 const updateToReducer = update => (reduxState, { type: message, data }) => {
   //initialize state here so the command is run properly
-  if (message === "@@INIT") return Root.init();
+  if (message === "@@redux/INIT" || message === "@@INIT") return Root.init();
   //otherwise pipe through the state machine as normal
   else return update(get(reduxState, "state"), message, data);
 }
