@@ -9,12 +9,12 @@ export const init = (options = {}) => {
     id = "",
     imageUrl = "https://media.giphy.com/media/3oEjI6SIIHBdRxXI40/giphy.gif",
     likes = 0,
-    loadingStatus = "loading",
+    statusMessage = "loading",
     bucketId = ""
   } = options;
   return {
     state: {
-      loadingStatus,
+      statusMessage,
       id,
       imageUrl,
       likes,
@@ -50,10 +50,10 @@ export const update = (state, message, data) => {
 };
 
 const viewMetadata = ({ state }) => {
-  if (state.loadingStatus === "complete")
+  if (state.statusMessage === "complete")
     return (
       <ul className="gif-metadata">
-        <li>Status: {state.loadingStatus}</li>
+        <li>Status: {state.statusMessage}</li>
         <li>ID: {state.id}</li>
         <li>Likes: {state.likes}</li>
       </ul>
@@ -61,13 +61,13 @@ const viewMetadata = ({ state }) => {
   else
     return (
       <ul className="gif-metadata">
-        <li>Status: {state.loadingStatus}</li>
+        <li>Status: {state.statusMessage}</li>
       </ul>
     );
 };
 
 const viewLikeButton = ({ state, dispatch }) => {
-  if (state.loadingStatus === "complete")
+  if (state.statusMessage === "complete")
     return (
       <button onClick={() => dispatch("like")}>
         Like

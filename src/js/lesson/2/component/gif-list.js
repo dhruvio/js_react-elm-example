@@ -32,7 +32,7 @@ const INIT_BUCKET_ID = "dogs";
 
 export const init = () => ({
   state: {
-    loadingStatus: "complete",
+    loadingStatus: "loading",
     bucketId: {
       input: INIT_BUCKET_ID,
       value: INIT_BUCKET_ID
@@ -88,7 +88,7 @@ export const update = (state, message, data) => {
           id: gif.id,
           imageUrl: gif.imageUrl,
           likes: gif.likes,
-          loadingStatus: "complete",
+          statusMessage: "complete",
           bucketId: state.bucketId.value
         })
       );
@@ -105,7 +105,7 @@ export const update = (state, message, data) => {
         id: data.body.id,
         imageUrl: data.body.imageUrl,
         likes: data.body.likes,
-        loadingStatus: "complete",
+        statusMessage: "complete",
         bucketId: state.bucketId.value
       });
       state.gifs.push(gifState);
@@ -115,8 +115,9 @@ export const update = (state, message, data) => {
       console.error(data.body);
       state.loadingStatus = "complete";
       const { state: errorGifState }= Gif.init({
+        //grandma dentures gif
         imageUrl: "https://media.giphy.com/media/l4KibWpBGWchSqCRy/giphy.gif",
-        loadingStatus: "error"
+        statusMessage: "error"
       });
       state.gifs.push(errorGifState);
       return { state };
