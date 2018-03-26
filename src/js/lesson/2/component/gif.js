@@ -2,8 +2,7 @@
 
 import React from "react";
 import PropTypes from "prop-types";
-import backEndGet from "../command/back-end-get";
-import backEndPost from "../command/back-end-post";
+import httpCommand from "../command/http";
 
 export const init = (options = {}) => {
   const {
@@ -29,8 +28,9 @@ export const subscriptions = () => [];
 export const update = (state, message, data) => {
   switch (message) {
     case "like":
-      const command = backEndPost({
-        path: `like/${state.id}`,
+      const command = httpCommand({
+        method: "POST",
+        url: `http://localhost:3001/like/${state.id}`,
         headers: { "x-bucket-id": state.bucketId },
         successMessage: "onLikeSuccess",
         failureMessage: "onLikeFailure"

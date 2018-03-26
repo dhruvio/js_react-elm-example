@@ -99,6 +99,12 @@ module.exports = grunt => ({
     options: {
       port: gruntConfig.env.backEndPort,
       hostname: gruntConfig.env.backEndHost,
+      onCreateServer: (server, connect, options) => {
+        const io = require("socket.io").listen(server);
+        io.sockets.on("connection", socket => {
+          console.log("connection");
+        });
+      },
       middleware: [
         (req, res, next) => {
           const log = msg => grunt.log.writeln(`[connect:backEnd] ${msg}`);

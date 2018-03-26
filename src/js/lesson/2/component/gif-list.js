@@ -9,17 +9,19 @@ import mapIndexedCommand from "../util/map-indexed-command";
 import mapIndexedSubscriptions from "../util/map-indexed-subscriptions";
 import updateIndexedChild from "../util/update-indexed-child";
 import batchCommands from "../util/batch-commands";
-import backEndGet from "../command/back-end-get";
+import httpCommand from "../command/http";
 
-const getAllGifs = bucketId => backEndGet({
-  path: "gif",
+const getAllGifs = bucketId => httpCommand({
+  method: "GET",
+  url: "http://localhost:3001/gif",
   headers: { "x-bucket-id": bucketId },
   successMessage: "onGetAllGifsSuccess",
   failureMessage: "onGetAllGifsFailure"
 });
 
-const getNewGif = (bucketId, category) => backEndGet({
-  path: `gif/${category}`,
+const getNewGif = (bucketId, category) => httpCommand({
+  method: "GET",
+  url: `http://localhost:3001/gif/${category}`,
   headers: { "x-bucket-id": bucketId },
   successMessage: "onGetNewGifSuccess",
   failureMessage: "onGetNewGifFailure"
@@ -158,11 +160,11 @@ export const view = ({ state, dispatch }) => {
         <li>Category: {state.categoryInput}</li>
       </ul>
       <form className="gif-list-bucket-id" onSubmit={changeBucketId}>
-        <input value={state.bucketId.input} onChange={onInputBucketId} />
+        <input value={state.bucketId.input} placeholder="Bucket ID" onChange={onInputBucketId} />
         <button onClick={changeBucketId}>Change Bucket ID</button>
       </form>
       <form className="gif-list-add" onSubmit={addGif}>
-        <input value={state.categoryInput} onChange={onInputCategory} />
+        <input value={state.categoryInput} placeholder="Category" onChange={onInputCategory} />
         <button onClick={addGif}>Add Gif</button>
       </form>
       {viewGifs({
