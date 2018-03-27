@@ -3,7 +3,7 @@
 import React from "react";
 import ReactDom from "react-dom";
 import { createStore } from "redux";
-import * as root from "./component/counter-list";
+import * as Root from "./component/counter-list";
 
 //helper to build reducer function
 const updateToReducer = update => (state, { type: message, data }) => update(state, message, data);
@@ -11,14 +11,14 @@ const updateToReducer = update => (state, { type: message, data }) => update(sta
 const storeToDispatch = store => (type, data) => store.dispatch({ type, data });
 //helper to propagate render to DOM
 const render = (state, dispatch) => ReactDom.render(
-  (<root.view state={state} dispatch={dispatch} />),
+  (<Root.view state={state} dispatch={dispatch} />),
   document.getElementById("main")
 );
 //initialize the store
-const reducer = updateToReducer(root.update);
+const reducer = updateToReducer(Root.update);
 const store = createStore(
   reducer,
-  root.init(),
+  Root.init(),
   //support redux devtools
   window.__REDUX_DEVTOOLS_EXTENSION__ && window.__REDUX_DEVTOOLS_EXTENSION__()
 );
