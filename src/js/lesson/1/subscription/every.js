@@ -4,7 +4,7 @@ import { assign } from "lodash";
 import serializeSubscriptionId from "../util/serialize-subscription-id";
 
 export default (intervalDuration, message, data = {}) => {
-  const id = serializeSubscriptionId("every", message, data);
+  const id = serializeSubscriptionId("every", message);
   const start = dispatch => {
     const intervalId = setInterval(
       () => dispatch(

@@ -3,6 +3,7 @@
 import React from "react";
 import PropTypes from "prop-types";
 import httpCommand from "../command/http";
+import websocketSubscription from "../subscription/websocket";
 
 export const init = (options = {}) => {
   const {
@@ -23,7 +24,10 @@ export const init = (options = {}) => {
   };
 };
 
-export const subscriptions = () => [];
+export const subscriptions = state => {
+  if (state.id) return [ websocketSubscription(`like:${state.id}`, "onLikeSuccess") ];
+  else return [];
+};
 
 export const update = (state, message, data) => {
   switch (message) {

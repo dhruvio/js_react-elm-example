@@ -1,5 +1,3 @@
 "use strict";
 
-export default (name, message, data = {}) => {
-  return { name, message, data };
-};
+export default (root, child) => `${root}/${child}`;

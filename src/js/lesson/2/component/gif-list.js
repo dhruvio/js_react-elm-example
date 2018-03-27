@@ -2,7 +2,7 @@
 
 import React from "react";
 import PropTypes from "prop-types";
-import { assign } from "lodash";
+import { assign, flatten } from "lodash";
 import * as Gif from "./gif";
 import mapIndexedDispatch from "../util/map-indexed-dispatch";
 import mapIndexedCommand from "../util/map-indexed-command";
@@ -43,7 +43,10 @@ export const init = () => ({
   command: getAllGifs(INIT_BUCKET_ID)
 });
 
-export const subscriptions = () => [];
+export const subscriptions = ({ gifs }) => {
+  const mappedSubs = gifs.map((gif, index) => mapIndexedSubscriptions("updateGif", index, Gif.subscriptions(gif)));
+  return flatten(mappedSubs);
+};
 
 export const update = (state, message, data) => {
   switch (message) {

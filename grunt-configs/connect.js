@@ -1,6 +1,23 @@
 const _ = require("lodash");
 const got = require("got");
 
+const activeSockets = [];
+
+const activeSocketIndex = socket => activeSockets.indexOf(socket);
+
+const activateSocket = socket => {
+  if (activeSocketIndex(socket) === -1) activeSockets.push(socket);
+};
+
+const deactivateSocket = socket => {
+  const index = activeSocketIndex(socket);
+  if (index !== -1) activeSockets.splice(index, 1);
+};
+
+const publish = (event, data) => {
+  activeSockets.forEach(socket => socket.emit(event, data));
+};
+
 const router = (method, url = "") => {
   method = method.toLowerCase();
   let match;
@@ -86,52 +103,57 @@ const handlers = {
   },
 
   likeGif: async (bucketId, { id }) => {
+    const body = storeLike(bucketId, id);
+    publish(`like:${body.id}`, { likes: body.likes });
     return {
       code: 200,
-      body: storeLike(bucketId, id)
+      body
     };
   }
 
 };
 
-module.exports = grunt => ({
-  backEnd: {
-    options: {
-      port: gruntConfig.env.backEndPort,
-      hostname: gruntConfig.env.backEndHost,
-      onCreateServer: (server, connect, options) => {
-        const io = require("socket.io").listen(server);
-        io.sockets.on("connection", socket => {
-          console.log("connection");
-        });
-      },
-      middleware: [
-        (req, res, next) => {
-          const log = msg => grunt.log.writeln(`[connect:backEnd] ${msg}`);
-          log(`request: ${req.method} ${req.url}`);
-          const { route, params } = router(req.method, req.url);
-          if (!route) return next();
-          const bucketId = req.headers["x-bucket-id"] || "cats";
-          const handler = handlers[route];
-          if (!handler) return next();
-          log(`handler: ${route} ${bucketId}`);
-          handler(bucketId, params)
-            .then(({ code, body }) => {
-              res.statusCode = code;
-              res.setHeader("access-control-allow-headers", "x-bucket-id, content-type");
-              res.setHeader("access-control-allow-methods", "OPTIONS, GET, POST");
-              res.setHeader("access-control-allow-origin", "*");
-              res.setHeader("accept", "application/json");
-              res.setHeader("content-type", "application/json");
-              if (body) res.write(JSON.stringify(body), "utf8");
-              res.end();
-            })
-            .catch(error => {
-              log("unhandled error");
-              log(error.message || error);
-            });
-        }
-      ]
+module.exports = grunt => {
+  const log = msg => grunt.log.writeln(`[connect:backEnd] ${msg}`);
+  return {
+    backEnd: {
+      options: {
+        port: gruntConfig.env.backEndPort,
+        hostname: gruntConfig.env.backEndHost,
+        onCreateServer: (server, connect, options) => {
+          const io = require("socket.io").listen(server);
+          io.on("connection", socket => {
+            activateSocket(socket);
+            socket.on("disconnect", () => deactivateSocket(socket));
+          });
+        },
+        middleware: [
+          (req, res, next) => {
+            log(`request: ${req.method} ${req.url}`);
+            const { route, params } = router(req.method, req.url);
+            if (!route) return next();
+            const bucketId = req.headers["x-bucket-id"] || "cats";
+            const handler = handlers[route];
+            if (!handler) return next();
+            log(`handler: ${route} ${bucketId}`);
+            handler(bucketId, params)
+              .then(({ code, body }) => {
+                res.statusCode = code;
+                res.setHeader("access-control-allow-headers", "x-bucket-id, content-type");
+                res.setHeader("access-control-allow-methods", "OPTIONS, GET, POST");
+                res.setHeader("access-control-allow-origin", "*");
+                res.setHeader("accept", "application/json");
+                res.setHeader("content-type", "application/json");
+                if (body) res.write(JSON.stringify(body), "utf8");
+                res.end();
+              })
+              .catch(error => {
+                log("unhandled error");
+                log(error.message || error);
+              });
+          }
+        ]
+      }
     }
-  }
-});
+  };
+};
