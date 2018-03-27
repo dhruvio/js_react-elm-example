@@ -35,17 +35,9 @@
 
 ## 2.1 Definitions
 
-### Commands
+### `http` Command
 
-#### `httpGet`
-
-#### `httpPost`
-
-#### `websocketPublish`
-
-### Subscriptions
-
-#### `websocketSubscribe`
+### `websocket` Subscription
 
 ## 2.2 Code Review
 
