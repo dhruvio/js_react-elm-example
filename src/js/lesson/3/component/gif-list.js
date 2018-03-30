@@ -3,13 +3,14 @@
 import React from "react";
 import PropTypes from "prop-types";
 import { assign, flatten } from "lodash";
-import * as Gif from "./gif";
+import * as GifStatic from "./gif-static";
 import mapIndexedDispatch from "../util/map-indexed-dispatch";
 import mapIndexedCommand from "../util/map-indexed-command";
 import mapIndexedSubscriptions from "../util/map-indexed-subscriptions";
 import updateIndexedChild from "../util/update-indexed-child";
 import batchCommands from "../util/batch-commands";
 import httpCommand from "../command/http";
+import dispatchCommand from "../command/dispatch";
 
 const getAllGifs = bucketId => httpCommand({
   method: "GET",
@@ -39,11 +40,14 @@ export const init = () => ({
     categoryInput: "dog",
     gifs: []
   },
-  command: getAllGifs(INIT_BUCKET_ID)
+  command: batchCommands(
+    dispatchCommand("@setTitle", { title: "List of Gifs" }),
+    getAllGifs(INIT_BUCKET_ID)
+  )
 });
 
 export const subscriptions = ({ gifs }) => {
-  const mappedSubs = gifs.map((gif, index) => mapIndexedSubscriptions("updateGif", index, Gif.subscriptions(gif)));
+  const mappedSubs = gifs.map((gif, index) => mapIndexedSubscriptions("updateGif", index, GifStatic.subscriptions(gif)));
   return flatten(mappedSubs);
 };
 
@@ -78,7 +82,7 @@ export const update = (state, message, data) => {
         index: data.index,
         parentState: state,
         parentMessage: "updateGif",
-        childUpdate: Gif.update,
+        childUpdate: GifStatic.update,
         childMessage: data.message,
         childData: data.data
       });
@@ -86,12 +90,13 @@ export const update = (state, message, data) => {
     case "onGetAllGifsSuccess":
       state.loadingStatus = "complete";
       const result = data.body.map(
-        gif => Gif.init({
+        gif => GifStatic.init({
           id: gif.id,
           imageUrl: gif.imageUrl,
           likes: gif.likes,
           statusMessage: "complete",
-          bucketId: state.bucketId.value
+          bucketId: state.bucketId.value,
+          showPermalinkButton: true
         })
       );
       state.gifs = result.map(({ state }) => state);
@@ -103,20 +108,20 @@ export const update = (state, message, data) => {
 
     case "onGetNewGifSuccess":
       state.loadingStatus = "complete";
-      const { state: gifState } = Gif.init({
+      const { state: gifState } = GifStatic.init({
         id: data.body.id,
         imageUrl: data.body.imageUrl,
         likes: data.body.likes,
         statusMessage: "complete",
-        bucketId: state.bucketId.value
+        bucketId: state.bucketId.value,
+        showPermalinkButton: true
       });
       state.gifs.push(gifState);
       return { state };
 
     case "onGetNewGifFailure":
-      console.error(data.body);
       state.loadingStatus = "complete";
-      const { state: errorGifState }= Gif.init({
+      const { state: errorGifState }= GifStatic.init({
         //grandma dentures gif
         imageUrl: "https://media.giphy.com/media/l4KibWpBGWchSqCRy/giphy.gif",
         statusMessage: "error"
@@ -135,7 +140,7 @@ const viewGifs = ({ gifs, dispatch }) => {
       //reverse the UI of gifs so the newest one is at the top
       views.unshift(
         <div key={index} className="gif-list-child" style={{ marginTop: "40px" }}>
-        <Gif.view state={gif} dispatch={mapIndexedDispatch("updateGif", index, dispatch)} />
+        <GifStatic.view state={gif} dispatch={mapIndexedDispatch("updateGif", index, dispatch)} />
         </div>
       );
       return views;
@@ -156,7 +161,6 @@ export const view = ({ state, dispatch }) => {
   const addGif = e => e.preventDefault() || dispatch("addGif");
   return (
     <div className="gif-list">
-      <h1>Gif List</h1>
       <ul className="gif-list-metadata">
         <li>Loading status: {state.loadingStatus}</li>
         <li>Bucket ID: {state.bucketId.value}</li>

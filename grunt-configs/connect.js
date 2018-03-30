@@ -31,9 +31,16 @@ const router = (method, url = "") => {
       route: "getAllGifs",
       params: {}
     };
-  else if ((method === "get") && (match = url.match(/^\/gif\/([a-zA-Z]+)\/?$/)))
+  else if ((method === "get") && (match = url.match(/^\/gif\/([a-zA-Z0-9]+)\/?$/)))
     return {
-      route: "fetchGif",
+      route: "getOneGif",
+      params: {
+        id: match[1]
+      }
+    };
+  else if ((method === "post") && (match = url.match(/^\/gif\/([a-zA-Z]+)\/?$/)))
+    return {
+      route: "fetchNewGif",
       params: {
         category: match[1]
       }
@@ -52,6 +59,11 @@ const router = (method, url = "") => {
 const gifStores = {};
 
 const storeGetAll = bucketId => gifStores[bucketId] || [];
+
+const storeGetOne = (bucketId, id) => {
+  const gifs = storeGetAll(bucketId);
+  return _.find(gifs, { id });
+};
 
 const storePut = (bucketId, id, imageUrl) => {
   const data = { id, imageUrl, likes: 0 };
@@ -81,7 +93,13 @@ const handlers = {
     };
   },
 
-  fetchGif: async (bucketId, { category = "cat" }) => {
+  getOneGif: async (bucketId, { id }) => {
+    const body = storeGetOne(bucketId, id);
+    if (body) return { code: 200, body };
+    return { code: 404 };
+  },
+
+  fetchNewGif: async (bucketId, { category = "cat" }) => {
     try {
       const url = `http://api.giphy.com/v1/gifs/random?api_key=dc6zaTOxFJmzC&tag=${category}`;
       let { body } = await got(url);
