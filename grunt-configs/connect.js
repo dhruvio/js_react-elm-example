@@ -14,8 +14,10 @@ const deactivateSocket = socket => {
   if (index !== -1) activeSockets.splice(index, 1);
 };
 
-const publish = (event, data) => {
-  activeSockets.forEach(socket => socket.emit(event, data));
+const publishToSockets = (event, data) => {
+  setTimeout(() => {
+    activeSockets.forEach(socket => socket.emit(event, data));
+  }, 1000);
 };
 
 const router = (method, url = "") => {
@@ -45,11 +47,11 @@ const router = (method, url = "") => {
         category: match[1]
       }
     };
-  else if ((method === "post") && (match = url.match(/^\/like\/([a-zA-Z0-9]+)\/?$/)))
+  else if ((method === "post") && (match = url.match(/^\/like\/([a-zA-Z0-9.]+)\/?$/)))
     return {
       route: "likeGif",
       params: {
-        id: match[1]
+        uid: match[1]
       }
     };
   else
@@ -66,14 +68,16 @@ const storeGetOne = (bucketId, id) => {
 };
 
 const storePut = (bucketId, id, imageUrl) => {
-  const data = { id, imageUrl, likes: 0 };
-  gifStores[bucketId] = storeGetAll(bucketId).concat(data);
+  const existingGifs = storeGetAll(bucketId);
+  const uid = `${bucketId}.${existingGifs.length}.${id}`;
+  const data = { uid, id, imageUrl, likes: 0 };
+  gifStores[bucketId] = existingGifs.concat(data);
   return data;
 };
 
-const storeLike = (bucketId, id) => {
-  const data = _.find(storeGetAll(bucketId), { id });
-  if (!data) throw new Error(`Can't like gif that doesn't exist in bucket ${bucketId} for id ${id}`);
+const storeLike = (bucketId, uid) => {
+  const data = _.find(storeGetAll(bucketId), { uid });
+  if (!data) throw new Error(`Can't like gif that doesn't exist in bucket ${bucketId} for uid ${uid}`);
   data.likes++;
   return data;
 };
@@ -106,9 +110,14 @@ const handlers = {
       body = JSON.parse(body);
       const id = _.get(body, "data.id");
       const imageUrl = _.get(body, "data.image_url");
+      const payload = storePut(bucketId, id, imageUrl);
       return {
         code: 200,
-        body: storePut(bucketId, id, imageUrl)
+        body: payload,
+        publish: {
+          channel: "newGif",
+          data: payload
+        }
       };
     } catch (error) {
       return {
@@ -120,12 +129,15 @@ const handlers = {
     }
   },
 
-  likeGif: async (bucketId, { id }) => {
-    const body = storeLike(bucketId, id);
-    publish(`like:${body.id}`, { likes: body.likes });
+  likeGif: async (bucketId, { uid }) => {
+    const body = storeLike(bucketId, uid);
     return {
       code: 200,
-      body
+      body,
+      publish: {
+        channel: `like:${body.uid}`,
+        data: { likes: body.likes }
+      }
     };
   }
 
@@ -155,7 +167,7 @@ module.exports = grunt => {
             if (!handler) return next();
             log(`handler: ${route} ${bucketId}`);
             handler(bucketId, params)
-              .then(({ code, body }) => {
+              .then(({ code, body, publish }) => {
                 res.statusCode = code;
                 res.setHeader("access-control-allow-headers", "x-bucket-id, content-type");
                 res.setHeader("access-control-allow-methods", "OPTIONS, GET, POST");
@@ -163,7 +175,9 @@ module.exports = grunt => {
                 res.setHeader("accept", "application/json");
                 res.setHeader("content-type", "application/json");
                 if (body) res.write(JSON.stringify(body), "utf8");
-                res.end();
+                res.end(() => {
+                  if (publish) publishToSockets(publish.channel, publish.data);
+                });
               })
               .catch(error => {
                 log("unhandled error");

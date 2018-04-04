@@ -17,7 +17,11 @@ const updateToReducer = update => (reduxState, { type: message, data }) => {
   //initialize state here so the command is run properly
   if (message === "@@redux/INIT" || message === "@@INIT") return Root.init();
   //otherwise pipe through the state machine as normal
-  else return update(get(reduxState, "state"), message, data);
+  else return update({
+    state: get(reduxState, "state"),
+    message,
+    data
+  });
 }
 
 //helper to propagate render to DOM

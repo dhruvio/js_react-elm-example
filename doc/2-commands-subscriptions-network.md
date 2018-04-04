@@ -6,8 +6,9 @@
 
 0. Introduction to React and unidirectional state management
 1. **Asynchronous side-effects and state management**
-2. Client-side routing and top-level components
-3. Testing and quality management
+2. Project organization and top-level components
+3. Client-side routing
+4. Testing and quality management
 
 ### 2.0.2 Learning outcomes
 
@@ -15,6 +16,8 @@
 - Explain the role of unidirectional state management in front-end applications.
 - **Utilize type signatures to describe the functions the make up a unidirectional front-end application.**
 - **Incorporate side-effecting, asynchronous behaviour into a unidirectional front-end application in a type-safe way.**
+- Explain the role of a Root component.
+- Describe how state access and mutation can be shared across a component tree.
 - Incorporate client-side routing into a unidirectional front-end application.
 - Define the differences in component "types" in unidirectional front-end applications that implement client-side routing.
 - Understand the role of static analyzers in managing the quality of JavaScript applications.
@@ -33,13 +36,7 @@
   - Guide: https://redux.js.org/
   - API reference: https://redux.js.org/api-reference
 
-## 2.1 Definitions
-
-### `http` Command
-
-### `websocket` Subscription
-
-## 2.2 Code Review
+## 2.1 Code Review
 
 ```bash
 git clone https://github.com/dhruvio/js_react-elm-example.git

@@ -33,7 +33,7 @@ const off = (channel, handler) => {
 };
 
 export default (channel, message, data = {}) => {
-  const id = serializeSubscriptionId("websocket", message);
+  const id = serializeSubscriptionId("websocket", channel, message);
   const start = dispatch => {
     const handler = body => dispatch(message, assign({ body }, data));
     on(channel, handler);

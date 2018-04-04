@@ -22,15 +22,16 @@ export const init = ({ id, bucketId }) => {
   };
 };
 
-export const subscriptions = state => {
-  return mapSubscriptions("gifMessage", GifStatic.subscriptions(state));
+export const subscriptions = ({ shared, state }) => {
+  return mapSubscriptions("gifMessage", GifStatic.subscriptions({ shared, state }));
 };
 
-export const update = (state, message, data) => {
+export const update = ({ shared, state, message, data }) => {
   switch (message) {
     case "onGetSuccess":
       return {
         state: GifStatic.init({
+          uid: data.body.uid,
           id: data.body.id,
           imageUrl: data.body.imageUrl,
           likes: data.body.likes,
@@ -51,6 +52,7 @@ export const update = (state, message, data) => {
       return updateChild({
         parentState: state,
         parentMessage: "gifMessage",
+        sharedState: shared,
         childUpdate: GifStatic.update,
         childMessage: data.message,
         childData: data.data
@@ -61,6 +63,6 @@ export const update = (state, message, data) => {
   }
 };
 
-export const view = ({ state, dispatch }) => (
-  <GifStatic.view state={state} dispatch={mapDispatch("gifMessage", dispatch)} />
+export const view = ({ state, shared, dispatch }) => (
+  <GifStatic.view shared={shared} state={state} dispatch={mapDispatch("gifMessage", dispatch)} />
 );

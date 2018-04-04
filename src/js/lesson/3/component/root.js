@@ -3,6 +3,7 @@
 import React from "react";
 import PropTypes from "prop-types";
 import * as GifList from "./gif-list";
+import * as WebsocketLog from "./websocket-log";
 import mapDispatch from "../util/map-dispatch";
 import mapSubscriptions from "../util/map-subscriptions";
 import mapCommand from "../util/map-command";
@@ -14,7 +15,7 @@ export const init = (Component = GifList) => {
     state: {
       shared: {
         title: "",
-        websocketCount: 0
+        websocketLog: []
       },
       page: {
         Component,
@@ -27,10 +28,13 @@ export const init = (Component = GifList) => {
 
 export const subscriptions = state => {
   const { Component, state: pageState } = state.page;
-  return mapSubscriptions("pageMessage", Component.subscriptions(pageState));
+  return mapSubscriptions("pageMessage", Component.subscriptions({
+    shared: state.shared,
+    state: pageState
+  }));
 };
 
-export const update = (state, message, data) => {
+export const update = ({ state, message, data }) => {
   switch (message) {
     case "@setTitle":
       state.shared.title = data.title;
@@ -39,7 +43,6 @@ export const update = (state, message, data) => {
     case "@navigate":
       const { Component, initArgs = [] } = data;
       const { state: pageState, command: pageCommand } = Component.init(...initArgs);
-      state.shared.websocketCount = 0;
       state.page = {
         Component,
         state: pageState
@@ -49,34 +52,41 @@ export const update = (state, message, data) => {
         command: mapCommand("pageMessage", pageCommand)
       };
 
-    case "@incrementWebsocketCount":
-      state.shared.websocketCount++;
+    case "@appendToWebsocketLog":
+      state.shared.websocketLog.push({
+        timestamp: Date.now(),
+        message: data.message
+      });
       return { state };
 
     case "pageMessage":
-      return updateChild({
-        key: "page.state",
-        parentState: state,
+      const { state: pageState_, command } = updateChild({
+        key: "state",
+        parentState: state.page,
         parentMessage: "pageMessage",
+        sharedState: state.shared,
         childUpdate: state.page.Component.update,
         childMessage: data.message,
         childData: data.data
       });
+      state.page = pageState_;
+      return { state, command };
 
     default:
       return { state };
   }
 };
 
+const linkStyle = {
+  color: "blue",
+  textDecoration: "underline",
+  cursor: "pointer"
+};
+
 const viewHeader = ({ state, dispatch }) => {
-  const h1Style = {
-    color: "blue",
-    textDecoration: "underline",
-    cursor: "pointer"
-  };
   return (
     <header>
-      <h1 style={h1Style} onClick={() => dispatch("@navigate", { Component: GifList })}>
+      <h1 style={linkStyle} onClick={() => dispatch("@navigate", { Component: GifList })}>
         My Gif App
       </h1>
       <ul>
@@ -84,7 +94,8 @@ const viewHeader = ({ state, dispatch }) => {
           <b>Title:</b> {state.shared.title}
         </li>
         <li>
-          <b>Websocket messages received:</b> {state.shared.websocketCount}
+          <b style={linkStyle} onClick={() => dispatch("@navigate", { Component: WebsocketLog })}>Websocket messages processed:</b>
+          <span style={{ marginLeft: "10px" }}>{state.shared.websocketLog.length}</span>
         </li>
       </ul>
     </header>

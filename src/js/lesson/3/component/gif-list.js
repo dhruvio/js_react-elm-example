@@ -2,7 +2,7 @@
 
 import React from "react";
 import PropTypes from "prop-types";
-import { assign, flatten } from "lodash";
+import { find, assign, flatMap } from "lodash";
 import * as GifStatic from "./gif-static";
 import mapIndexedDispatch from "../util/map-indexed-dispatch";
 import mapIndexedCommand from "../util/map-indexed-command";
@@ -10,6 +10,7 @@ import mapIndexedSubscriptions from "../util/map-indexed-subscriptions";
 import updateIndexedChild from "../util/update-indexed-child";
 import batchCommands from "../util/batch-commands";
 import httpCommand from "../command/http";
+import websocketSubscription from "../subscription/websocket";
 import dispatchCommand from "../command/dispatch";
 
 const getAllGifs = bucketId => httpCommand({
@@ -30,7 +31,7 @@ const getNewGif = (bucketId, category) => httpCommand({
 
 const INIT_BUCKET_ID = "dogs";
 
-export const init = () => ({
+export const init = shared => ({
   state: {
     loadingStatus: "loading",
     bucketId: {
@@ -46,12 +47,14 @@ export const init = () => ({
   )
 });
 
-export const subscriptions = ({ gifs }) => {
-  const mappedSubs = gifs.map((gif, index) => mapIndexedSubscriptions("updateGif", index, GifStatic.subscriptions(gif)));
-  return flatten(mappedSubs);
+export const subscriptions = ({ shared, state }) => {
+  const { gifs } = state;
+  const mappedSubs = flatMap(gifs, (gif, index) => mapIndexedSubscriptions("updateGif", index, GifStatic.subscriptions({ shared, state: gif })));
+  const newGifSub = websocketSubscription("newGif", "receiveNewGif");
+  return mappedSubs.concat(newGifSub);
 };
 
-export const update = (state, message, data) => {
+export const update = ({ shared, state, message, data }) => {
   switch (message) {
     case "onInputBucketId":
       state.bucketId.input = data.input;
@@ -82,6 +85,7 @@ export const update = (state, message, data) => {
         index: data.index,
         parentState: state,
         parentMessage: "updateGif",
+        sharedState: shared,
         childUpdate: GifStatic.update,
         childMessage: data.message,
         childData: data.data
@@ -91,6 +95,7 @@ export const update = (state, message, data) => {
       state.loadingStatus = "complete";
       const result = data.body.map(
         gif => GifStatic.init({
+          uid: gif.uid,
           id: gif.id,
           imageUrl: gif.imageUrl,
           likes: gif.likes,
@@ -108,20 +113,24 @@ export const update = (state, message, data) => {
 
     case "onGetNewGifSuccess":
       state.loadingStatus = "complete";
-      const { state: gifState } = GifStatic.init({
-        id: data.body.id,
-        imageUrl: data.body.imageUrl,
-        likes: data.body.likes,
-        statusMessage: "complete",
-        bucketId: state.bucketId.value,
-        showPermalinkButton: true
-      });
-      state.gifs.push(gifState);
+      const gifDoesNotExist = !find(state.gifs, { uid: data.body.uid });
+      if (gifDoesNotExist) {
+        const { state: gifState } = GifStatic.init({
+          uid: data.body.uid,
+          id: data.body.id,
+          imageUrl: data.body.imageUrl,
+          likes: data.body.likes,
+          statusMessage: "complete",
+          bucketId: state.bucketId.value,
+          showPermalinkButton: true
+        });
+        state.gifs.push(gifState);
+      }
       return { state };
 
     case "onGetNewGifFailure":
       state.loadingStatus = "complete";
-      const { state: errorGifState }= GifStatic.init({
+      const { state: errorGifState } = GifStatic.init({
         //grandma dentures gif
         imageUrl: "https://media.giphy.com/media/l4KibWpBGWchSqCRy/giphy.gif",
         statusMessage: "error"
@@ -129,18 +138,29 @@ export const update = (state, message, data) => {
       state.gifs.push(errorGifState);
       return { state };
 
+    case "receiveNewGif":
+      const gifDoesNotExist_ = !find(state.gifs, { uid: data.body.uid });
+      let command;
+      if (gifDoesNotExist_) {
+        command = batchCommands(
+          dispatchCommand("@appendToWebsocketLog", { message: `Received new Gif, UID: ${data.body.uid}` }),
+          dispatchCommand("onGetNewGifSuccess", data)
+        );
+      }
+      return { state, command };
+
     default:
       return { state };
   }
 };
 
-const viewGifs = ({ gifs, dispatch }) => {
+const viewGifs = ({ shared, gifs, dispatch }) => {
   const children= gifs.reduce(
     (views, gif, index) => {
       //reverse the UI of gifs so the newest one is at the top
       views.unshift(
         <div key={index} className="gif-list-child" style={{ marginTop: "40px" }}>
-        <GifStatic.view state={gif} dispatch={mapIndexedDispatch("updateGif", index, dispatch)} />
+        <GifStatic.view shared={shared} state={gif} dispatch={mapIndexedDispatch("updateGif", index, dispatch)} />
         </div>
       );
       return views;
@@ -154,13 +174,14 @@ const viewGifs = ({ gifs, dispatch }) => {
   );
 };
 
-export const view = ({ state, dispatch }) => {
+export const view = ({ state, shared, dispatch }) => {
   const onInputBucketId = e => dispatch("onInputBucketId", { input: e.target.value });
   const onInputCategory = e => dispatch("onInputCategory", { input: e.target.value });
   const changeBucketId = e => e.preventDefault() || dispatch("changeBucketId");
   const addGif = e => e.preventDefault() || dispatch("addGif");
   return (
     <div className="gif-list">
+      <h2>Gif List</h2>
       <ul className="gif-list-metadata">
         <li>Loading status: {state.loadingStatus}</li>
         <li>Bucket ID: {state.bucketId.value}</li>
@@ -175,6 +196,7 @@ export const view = ({ state, dispatch }) => {
         <button onClick={addGif}>Add Gif</button>
       </form>
       {viewGifs({
+        shared,
         gifs: state.gifs,
         dispatch
       })}

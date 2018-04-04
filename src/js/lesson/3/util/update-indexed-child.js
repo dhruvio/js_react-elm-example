@@ -4,10 +4,15 @@ import { defaults, noop } from "lodash";
 import batchCommands from "./batch-commands";
 import mapIndexedCommand from "./map-indexed-command";
 
-export default ({ key, index, parentState, parentMessage, childUpdate, childMessage, childData }) => {
+export default ({ key, index, parentState, parentMessage, sharedState, childUpdate, childMessage, childData }) => {
   const childUpdateResults = parentState[key].map((childState, childIndex) => {
     if (index !== childIndex) return { state: childState };
-    return childUpdate(childState, childMessage, childData);
+    return childUpdate({
+      shared: sharedState,
+      state: childState,
+      message: childMessage,
+      data: childData
+    });
   });
   const childStates = childUpdateResults.map(({ state }) => state);
   const childCommands = childUpdateResults.map(({ command }) => command);

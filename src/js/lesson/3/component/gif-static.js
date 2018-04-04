@@ -3,7 +3,7 @@
 import { defaults } from "lodash";
 import React from "react";
 import PropTypes from "prop-types";
-import * as GifConnected from "./gif-connected";
+import * as GifPermalink from "./gif-permalink";
 import dispatchCommand from "../command/dispatch";
 import httpCommand from "../command/http";
 import websocketSubscription from "../subscription/websocket";
@@ -11,6 +11,7 @@ import batchCommands from "../util/batch-commands";
 
 export const init = (options = {}) => {
   const {
+    uid = "",
     id = "",
     imageUrl = "https://media.giphy.com/media/3oEjI6SIIHBdRxXI40/giphy.gif",
     likes = 0,
@@ -21,30 +22,29 @@ export const init = (options = {}) => {
   return {
     state: {
       statusMessage,
+      uid,
       id,
       imageUrl,
       likes,
       bucketId,
-      showPermalinkButton,
-      ignoreNextWebsocketMessage: false
+      showPermalinkButton
     }
   };
 };
 
-export const subscriptions = state => {
-  if (state.id) return [ websocketSubscription(`like:${state.id}`, "receiveLike") ];
+export const subscriptions = ({ shared, state }) => {
+  if (state.uid) return [ websocketSubscription(`like:${state.uid}`, "receiveLike") ];
   else return [];
 };
 
-export const update = (state, message, data) => {
+export const update = ({ shared, state, message, data }) => {
   switch (message) {
     case "like":
-      state.ignoreNextWebsocketMessage = true;
       return {
         state,
         command: httpCommand({
           method: "POST",
-          url: `http://localhost:3001/like/${state.id}`,
+          url: `http://localhost:3001/like/${state.uid}`,
           headers: { "x-bucket-id": state.bucketId },
           successMessage: "onLikeSuccess",
           failureMessage: "onLikeFailure"
@@ -60,13 +60,12 @@ export const update = (state, message, data) => {
 
     case "receiveLike":
       let command;
-      if (!state.ignoreNextWebsocketMessage)
+      if (state.likes < data.body.likes) {
         command = batchCommands(
-          dispatchCommand("@incrementWebsocketCount"),
+          dispatchCommand("@appendToWebsocketLog", { message: `Received new like for Gif, UID: ${state.uid}` }),
           dispatchCommand("onLikeSuccess", data)
         );
-      else
-        state.ignoreNextWebsocketMessage = false;
+      }
       return { state, command };
 
     default:
@@ -95,7 +94,7 @@ const viewButtons = ({ state, dispatch }) => {
   if (state.statusMessage === "complete") {
     const like = () => dispatch("like");
     const navigate = () => dispatch("@navigate", {
-      Component: GifConnected,
+      Component: GifPermalink,
       initArgs: [{
         id: state.id,
         bucketId: state.bucketId
@@ -110,7 +109,7 @@ const viewButtons = ({ state, dispatch }) => {
   }
 };
 
-export const view = ({ state, dispatch }) => {
+export const view = ({ state, shared, dispatch }) => {
   return (
     <div className="gif">
       <img src={state.imageUrl} style={{ width: "300px" }}/>
