@@ -45,7 +45,7 @@ A *Root* component is the root node of our unidirectional front-end application'
 In this example, we will define a Root component that introduces three new pieces of functionality:
 
 0. Define a view layout, which includes a content area to view an active "page" component.
-1. Define a shared section of state that can be read by the Root component's direct children's `update` and `view` functions.
+1. Define a shared section of state that can be read by components' `subscriptions`, `update` and `view` functions.
 2. Define a set of messages in the Root component's `update` function that can be dispatched from anywhere in the component tree.
 
 The Elm Architecture does not specify how a Root component should be constructed. This example demonstrates one possible *application* of a Root component using The Elm Architecture.
