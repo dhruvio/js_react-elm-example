@@ -2,8 +2,12 @@
 
 import React from "react";
 import PropTypes from "prop-types";
+import dispatchCommand from "../command/dispatch";
 
-export const init = () => ({});
+export const init = () => ({
+  state: null,
+  command: dispatchCommand("@setTitle", { title: "Websocket Log" })
+});
 
 export const subscriptions = () => [];
 

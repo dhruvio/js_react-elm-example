@@ -5,6 +5,8 @@ import React from "react";
 import PropTypes from "prop-types";
 import * as GifStatic from "./gif-static";
 import httpCommand from "../command/http";
+import batchCommands from "../util/batch-commands";
+import dispatchCommand from "../command/dispatch";
 import mapDispatch from "../util/map-dispatch";
 import mapSubscriptions from "../util/map-subscriptions";
 import updateChild from "../util/update-child";
@@ -12,13 +14,16 @@ import updateChild from "../util/update-child";
 export const init = ({ id, bucketId }) => {
   return {
     state: GifStatic.init({ bucketId }).state,
-    command: httpCommand({
-      method: "GET",
-      url: `http://localhost:3001/gif/${id}`,
-      headers: { "x-bucket-id": bucketId },
-      successMessage: "onGetSuccess",
-      failureMessage: "onGetFailure"
-    })
+    command: batchCommands(
+      dispatchCommand("@setTitle", { title: `Permalink for gif: ${id}` }),
+      httpCommand({
+        method: "GET",
+        url: `http://localhost:3001/gif/${id}`,
+        headers: { "x-bucket-id": bucketId },
+        successMessage: "onGetSuccess",
+        failureMessage: "onGetFailure"
+      })
+    )
   };
 };
 

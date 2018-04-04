@@ -31,7 +31,7 @@ const getNewGif = (bucketId, category) => httpCommand({
 
 const INIT_BUCKET_ID = "dogs";
 
-export const init = shared => ({
+export const init = () => ({
   state: {
     loadingStatus: "loading",
     bucketId: {
